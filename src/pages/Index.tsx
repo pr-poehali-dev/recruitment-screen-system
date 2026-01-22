@@ -6,11 +6,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('contingent');
   const [selectedRecruit, setSelectedRecruit] = useState<string | null>('recruit-1');
+  const [showRecommendationsModal, setShowRecommendationsModal] = useState(false);
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [showManualSelection, setShowManualSelection] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
   const menuItems = [
     { id: 'contingent', label: 'Контингент', icon: 'Users' },
@@ -227,9 +235,12 @@ const Index = () => {
                                 </div>
                               </div>
                             </div>
-                            <Button className="w-full gap-2">
-                              <Icon name="RefreshCw" size={16} />
-                              Обновить рекомендации
+                            <Button 
+                              className="w-full gap-2"
+                              onClick={() => setShowRecommendationsModal(true)}
+                            >
+                              <Icon name="ExternalLink" size={16} />
+                              Открыть детализацию
                             </Button>
                           </CardContent>
                         </Card>
@@ -397,7 +408,12 @@ const Index = () => {
                         </div>
                       </div>
                     </div>
-                    <Button size="sm" className="w-full" variant="outline">
+                    <Button 
+                      size="sm" 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={() => setShowRecommendationsModal(true)}
+                    >
                       Просмотреть детали
                     </Button>
                   </div>
@@ -407,6 +423,282 @@ const Index = () => {
           </aside>
         </div>
       </main>
+
+      <Dialog open={showRecommendationsModal} onOpenChange={setShowRecommendationsModal}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Детализация рекомендаций ИИ-ассистента</DialogTitle>
+            <DialogDescription>
+              Призывник: Иванов Петр Сергеевич • Дело №2025-001
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-3 gap-6 mt-4">
+            <div className="col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Визуализация соответствия</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    {[
+                      { name: 'Сухопутные войска', percent: 94, color: 'bg-accent' },
+                      { name: 'ВДВ', percent: 89, color: 'bg-accent/80' },
+                      { name: 'Войска связи', percent: 76, color: 'bg-accent/60' },
+                      { name: 'Инженерные войска', percent: 68, color: 'bg-accent/40' },
+                      { name: 'Тыловые части', percent: 55, color: 'bg-accent/20' },
+                    ].map((item, index) => (
+                      <div 
+                        key={index}
+                        className="relative"
+                        onMouseEnter={() => setHoveredBar(index)}
+                        onMouseLeave={() => setHoveredBar(null)}
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-medium">{item.name}</span>
+                          <span className="text-xs font-bold">{item.percent}%</span>
+                        </div>
+                        <div className="h-8 bg-muted rounded-md overflow-hidden relative">
+                          <div 
+                            className={`h-full ${item.color} transition-all duration-300`}
+                            style={{ width: `${item.percent}%` }}
+                          />
+                        </div>
+                        {hoveredBar === index && (
+                          <div className="absolute z-10 mt-2 p-3 bg-popover border border-border rounded-md shadow-lg text-xs w-64">
+                            <p className="font-medium mb-1">Ключевые обоснования:</p>
+                            <ul className="space-y-1 text-muted-foreground">
+                              <li>• Физическая выносливость: 5/5</li>
+                              <li>• Устойчивость к стрессу: 4/5</li>
+                              <li>• Медицинская категория: А-1</li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Детализированный список рекомендаций</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-96">
+                    <div className="space-y-3">
+                      {[
+                        {
+                          id: 1,
+                          branch: 'Сухопутные войска: пехотные подразделения',
+                          percent: 94,
+                          reasons: 'Высокие физические показатели, отличная стрессоустойчивость, медицинская категория А-1',
+                          limitations: 'Нет ограничений',
+                          details: {
+                            medical: 'Рост 178 см, вес 72 кг, зрение 1.0/1.0, категория А-1 - полностью соответствует требованиям',
+                            psychological: 'Стрессоустойчивость 87/100, коммуникабельность 92/100 - превышает минимальные требования (70/100)',
+                            physical: 'Все показатели выше среднего, подходит для службы в полевых условиях'
+                          }
+                        },
+                        {
+                          id: 2,
+                          branch: 'Воздушно-десантные войска: десантно-штурмовые части',
+                          percent: 89,
+                          reasons: 'Отличная физическая подготовка, высокие лидерские качества',
+                          limitations: 'Требуется дополнительная проверка вестибулярного аппарата',
+                          details: {
+                            medical: 'Физические параметры соответствуют, рекомендуется проверка на устойчивость к высотным нагрузкам',
+                            psychological: 'Лидерские качества 78/100 - хороший показатель для десантных подразделений',
+                            physical: 'Выносливость и координация движений на высоком уровне'
+                          }
+                        },
+                        {
+                          id: 3,
+                          branch: 'Специальные войска связи: радиотехнические подразделения',
+                          percent: 76,
+                          reasons: 'Среднее техническое образование, хорошая обучаемость',
+                          limitations: 'Рекомендуется оценка технических навыков',
+                          details: {
+                            medical: 'Медицинские показатели соответствуют требованиям для службы в войсках связи',
+                            psychological: 'Коммуникабельность 92/100 - важно для координации связи',
+                            physical: 'Физические требования ниже, чем в боевых частях - полное соответствие'
+                          }
+                        },
+                      ].map((recommendation) => (
+                        <Collapsible key={recommendation.id}>
+                          <div className="border border-border rounded-md">
+                            <div className="p-4">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <Badge variant="default">{recommendation.percent}%</Badge>
+                                    <h4 className="font-medium text-sm">{recommendation.branch}</h4>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-3 text-xs">
+                                    <div>
+                                      <p className="text-muted-foreground mb-1">Ключевые обоснования:</p>
+                                      <p className="text-foreground">{recommendation.reasons}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted-foreground mb-1">Потенциальные ограничения:</p>
+                                      <p className="text-foreground">{recommendation.limitations}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <CollapsibleTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => setExpandedRow(expandedRow === recommendation.id ? null : recommendation.id)}
+                                  >
+                                    <Icon 
+                                      name={expandedRow === recommendation.id ? "ChevronUp" : "ChevronDown"} 
+                                      size={16} 
+                                    />
+                                  </Button>
+                                </CollapsibleTrigger>
+                              </div>
+                            </div>
+                            
+                            <CollapsibleContent>
+                              <div className="px-4 pb-4 border-t border-border pt-4 bg-muted/30">
+                                <h5 className="text-xs font-semibold mb-3">Детальное сравнение параметров:</h5>
+                                <div className="space-y-3 text-xs">
+                                  <div>
+                                    <p className="font-medium mb-1">Медицинские параметры:</p>
+                                    <p className="text-muted-foreground">{recommendation.details.medical}</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-medium mb-1">Психологические параметры:</p>
+                                    <p className="text-muted-foreground">{recommendation.details.psychological}</p>
+                                  </div>
+                                  <div>
+                                    <p className="font-medium mb-1">Физические параметры:</p>
+                                    <p className="text-muted-foreground">{recommendation.details.physical}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </CollapsibleContent>
+                          </div>
+                        </Collapsible>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="col-span-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Icon name="Users" size={16} />
+                    Похожие случаи (исторические аналоги)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    {[
+                      { id: 'А-2024-157', branch: 'Сухопутные войска', success: 'Высокая', similarity: 92 },
+                      { id: 'Б-2024-089', branch: 'ВДВ', success: 'Средняя', similarity: 87 },
+                      { id: 'В-2023-234', branch: 'Сухопутные войска', success: 'Высокая', similarity: 85 },
+                    ].map((analog, index) => (
+                      <div key={index} className="p-4 border border-border rounded-md bg-muted/20">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="text-xs font-medium">Дело {analog.id}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Сходство профиля: {analog.similarity}%</p>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {analog.success}
+                          </Badge>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <p className="text-xs text-muted-foreground">Направлен в:</p>
+                          <p className="text-xs font-medium mt-1">{analog.branch}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-3 mt-6">
+            <div className="flex-1 flex gap-3">
+              <Button 
+                onClick={() => {
+                  setShowRecommendationsModal(false);
+                }}
+                className="flex-1"
+              >
+                <Icon name="Check" size={16} className="mr-2" />
+                Принять рекомендацию №1
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={() => setShowManualSelection(!showManualSelection)}
+                className="flex-1"
+              >
+                <Icon name="Edit" size={16} className="mr-2" />
+                Выбрать вручную
+              </Button>
+              
+              <Button 
+                variant="secondary"
+                onClick={() => {
+                  setShowRecommendationsModal(false);
+                }}
+              >
+                <Icon name="Save" size={16} className="mr-2" />
+                Сохранить в дело
+              </Button>
+            </div>
+          </DialogFooter>
+
+          {showManualSelection && (
+            <div className="mt-4 p-4 border border-border rounded-md bg-muted/20">
+              <h4 className="text-sm font-medium mb-3">Ручной выбор рода войск</h4>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Выберите род войск</label>
+                  <select className="w-full mt-1 px-3 py-2 border border-input bg-background rounded-md text-sm">
+                    <option>Сухопутные войска</option>
+                    <option>Воздушно-десантные войска</option>
+                    <option>Войска связи</option>
+                    <option>Инженерные войска</option>
+                    <option>Тыловые части</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Причина отклонения от рекомендации ИИ <span className="text-destructive">*</span>
+                  </label>
+                  <Textarea 
+                    placeholder="Укажите причину выбора другого рода войск..."
+                    className="mt-1 min-h-20"
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Обязательное поле для сбора обратной связи и дообучения модели
+                  </p>
+                </div>
+                <Button 
+                  className="w-full"
+                  disabled={!rejectionReason.trim()}
+                >
+                  Подтвердить ручной выбор
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
